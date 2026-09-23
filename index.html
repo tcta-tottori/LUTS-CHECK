@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ZR ルック比較</title>
+<meta name="theme-color" content="#c9c9c6" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#2a2a29" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="ZR LUT">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+:root{
+  /* 中間グレーの周辺（カラー判断用のニュートラル） */
+  --ground:#c9c9c6;
+  --panel:#d8d8d5;
+  --panel-2:#e3e3e0;
+  --line:#b1b1ad;
+  --ink:#1c1c1b;
+  --ink-2:#4a4a47;
+  --ink-3:#6b6b67;
+  --accent:#a86b00;
+  --accent-ink:#ffffff;
+  --accent-soft:rgba(168,107,0,.14);
+  --screen:#111111;
+  --focus:#a86b00;
+  --display:"Barlow Condensed","Noto Sans JP",system-ui,sans-serif;
+  --body:"Noto Sans JP",system-ui,-apple-system,"Hiragino Sans",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#2a2a29;
+    --panel:#333332;
+    --panel-2:#3c3c3a;
+    --line:#4b4b48;
+    --ink:#ececea;
+    --ink-2:#c2c2be;
+    --ink-3:#9a9a95;
+    --accent:#f0b43c;
+    --accent-ink:#1c1c1b;
+    --accent-soft:rgba(240,180,60,.16);
+    --screen:#0c0c0c;
+    --focus:#f0b43c;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#2a2a29;
+  --panel:#333332;
+  --panel-2:#3c3c3a;
+  --line:#4b4b48;
+  --ink:#ececea;
+  --ink-2:#c2c2be;
+  --ink-3:#9a9a95;
+  --accent:#f0b43c;
+  --accent-ink:#1c1c1b;
+  --accent-soft:rgba(240,180,60,.16);
+  --screen:#0c0c0c;
+  --focus:#f0b43c;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.6;padding-inline:16px;padding-block:0 48px}
+.wrap{max-width:1120px;margin:0 auto}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+
+/* ヘッダー */
+header.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:8px 20px;padding-block:20px 14px}
+.brand{display:flex;flex-direction:column;gap:2px}
+.brand .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3)}
+.brand h1{margin:0;font-family:var(--display);font-weight:700;font-size:34px;line-height:1;letter-spacing:.01em;text-wrap:balance}
+.tabs{display:flex;gap:4px;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:3px}
+.tabs button{border:0;background:transparent;padding:7px 14px;border-radius:999px;font-size:13px;font-weight:500;cursor:pointer;color:var(--ink-2)}
+.tabs button[aria-selected="true"]{background:var(--ink);color:var(--ground)}
+
+/* ビューア */
+.viewer-grid{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:20px;align-items:start}
+@media (max-width:900px){.viewer-grid{grid-template-columns:minmax(0,1fr)}}
+.stage-col{position:sticky;top:env(safe-area-inset-top,0px);z-index:2;background:var(--ground);padding-block:4px 10px;display:flex;flex-direction:column;gap:10px}
+@media (max-width:900px){.stage-col{position:sticky}}
+.stage{position:relative;aspect-ratio:16/9;width:100%;max-width:100%;background:var(--screen);border-radius:6px;overflow:hidden;user-select:none;-webkit-user-select:none;touch-action:pan-y}
+.stage img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
+.stage .after{clip-path:inset(0 0 0 var(--cut,50%))}
+.stage .handle{position:absolute;top:0;bottom:0;left:var(--cut,50%);width:2px;margin-left:-1px;background:#fff;box-shadow:0 0 0 1px rgba(0,0,0,.35)}
+.stage .handle::after{content:"";position:absolute;top:50%;left:50%;width:30px;height:30px;margin:-15px 0 0 -15px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.4);
+  background-image:linear-gradient(90deg,transparent 9px,#555 9px,#555 11px,transparent 11px,transparent 19px,#555 19px,#555 21px,transparent 21px)}
+.stage .tag{position:absolute;top:8px;font-family:var(--mono);font-size:11px;letter-spacing:.04em;padding:3px 7px;border-radius:3px;background:rgba(0,0,0,.62);color:#f2f2f0;max-width:46%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stage .tag.l{left:8px}.stage .tag.r{right:8px}
+.stage.mode-hold .after{clip-path:none}
+.stage.mode-hold .handle,.stage.mode-hold .tag.l{display:none}
+.stage.mode-hold.pressing .after{opacity:0}
+.stage.mode-hold.pressing .tag.r{display:none}
+.stage.mode-hold.pressing .tag.l{display:block}
+.hold-hint{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);font-size:12px;padding:3px 10px;border-radius:999px;background:rgba(0,0,0,.55);color:#f2f2f0;display:none}
+.stage.mode-hold .hold-hint{display:block}
+.pair{display:none;grid-template-columns:1fr 1fr;gap:6px}
+.pair figure{margin:0;display:flex;flex-direction:column;gap:4px}
+.pair img{width:100%;max-width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:4px;background:var(--screen);display:block}
+.pair figcaption{font-family:var(--mono);font-size:11px;color:var(--ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media (max-width:560px){.pair{grid-template-columns:1fr}}
+.stage-col.side .stage{display:none}.stage-col.side .pair{display:grid}
+
+.controls{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;justify-content:space-between}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--panel)}
+.seg button{border:0;background:transparent;padding:6px 11px;font-size:12.5px;cursor:pointer;color:var(--ink-2);white-space:nowrap}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);font-weight:500}
+.ctl{display:flex;align-items:center;gap:8px}
+.ctl .lbl{font-size:11px;letter-spacing:.08em;color:var(--ink-3);font-family:var(--mono);text-transform:uppercase}
+
+.now{display:grid;grid-template-columns:auto 1fr;gap:2px 12px;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:10px 12px}
+.now .k{font-size:11px;color:var(--ink-3);font-family:var(--mono);letter-spacing:.06em;text-transform:uppercase;padding-top:2px}
+.now .v{font-size:13.5px;min-width:0;overflow-wrap:anywhere}
+.now .v.mono{font-family:var(--mono);font-size:12.5px}
+
+/* サイドパネル */
+aside.side{display:flex;flex-direction:column;gap:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px 14px}
+.card h2{margin:0 0 8px;font-family:var(--display);font-weight:600;font-size:18px;letter-spacing:.03em;text-transform:uppercase}
+.scenes{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.scenes button{border:2px solid transparent;border-radius:5px;padding:0;background:var(--screen);cursor:pointer;overflow:hidden;display:flex;flex-direction:column}
+.scenes button img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block}
+.scenes button span{font-size:10.5px;padding:2px 4px;background:var(--panel-2);color:var(--ink-2);text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.scenes button[aria-pressed="true"]{border-color:var(--accent)}
+.note{font-size:12.5px;color:var(--ink-2);margin:0}
+.note+.note{margin-top:6px}
+
+/* LUT 一覧 */
+.list-head{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between;margin-top:26px;margin-bottom:10px}
+.list-head h2{margin:0;font-family:var(--display);font-weight:700;font-size:24px;letter-spacing:.02em}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips button{border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:5px 12px;font-size:12.5px;cursor:pointer;color:var(--ink-2);white-space:nowrap}
+.chips button[aria-pressed="true"]{background:var(--ink);color:var(--ground);border-color:var(--ink)}
+.chips .n{font-family:var(--mono);font-size:11px;opacity:.7;margin-left:4px;font-variant-numeric:tabular-nums}
+.luts{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px}
+.lut{display:grid;grid-template-rows:auto auto;border:1px solid var(--line);background:var(--panel);border-radius:6px;overflow:hidden;cursor:pointer;text-align:left;padding:0}
+.lut img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block;background:var(--screen)}
+.lut .meta{padding:8px 10px 10px;display:flex;flex-direction:column;gap:3px;min-width:0}
+.lut .fn{font-family:var(--mono);font-size:12px;font-weight:500;overflow-wrap:anywhere;display:flex;gap:6px;align-items:baseline}
+.lut .fn .star{color:var(--accent);font-family:var(--body)}
+.lut .ds{font-size:12.5px;color:var(--ink-2);line-height:1.45}
+.lut .grp{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);font-family:var(--mono)}
+.lut[aria-pressed="true"]{outline:2px solid var(--accent);outline-offset:-2px;background:var(--accent-soft)}
+
+/* ピクチャーコントロール */
+.pc-intro{max-width:68ch;margin:6px 0 18px}
+.pc-intro p{margin:0 0 8px;color:var(--ink-2);font-size:14px}
+.cond{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 18px;padding:0;list-style:none}
+.cond li{font-size:12px;font-family:var(--mono);border:1px solid var(--line);background:var(--panel);border-radius:4px;padding:3px 8px}
+.pcs{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+.pc{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px;display:flex;flex-direction:column;gap:8px}
+.pc .slot{font-family:var(--mono);font-size:11px;color:var(--ink-3);letter-spacing:.06em;display:flex;justify-content:space-between;gap:8px}
+.pc .slot b{color:var(--ink);font-weight:500}
+.pc h3{margin:0;font-family:var(--display);font-weight:600;font-size:21px;line-height:1.15;letter-spacing:.01em;text-wrap:balance}
+.pc .by{font-size:12px;color:var(--ink-3)}
+.pc p{margin:0;font-size:13.5px;color:var(--ink-2)}
+.pc .use{display:flex;flex-wrap:wrap;gap:5px}
+.pc .use span{font-size:11.5px;background:var(--panel-2);border:1px solid var(--line);border-radius:3px;padding:1px 6px;color:var(--ink-2)}
+.pc .rate{font-size:13px;color:var(--accent);letter-spacing:.1em}
+.pc .rate small{color:var(--ink-3);letter-spacing:0;margin-left:6px}
+.pc a{font-size:13px;color:var(--ink);text-decoration:underline;text-decoration-color:var(--accent);text-underline-offset:3px;margin-top:auto;align-self:flex-start}
+.pc.fav{border-color:var(--accent)}
+.hidden{display:none !important}
+footer{margin-top:36px;font-size:12px;color:var(--ink-3);max-width:80ch}
+
+/* オフライン／インストール */
+.offline-card{display:flex;flex-direction:column;gap:8px}
+.offline-card .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.btn{border:1px solid var(--line);background:var(--panel-2);color:var(--ink);border-radius:6px;padding:7px 12px;font-size:13px;cursor:pointer}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:transparent;font-weight:500}
+.btn:disabled{opacity:.55;cursor:default}
+.bar{height:6px;border-radius:3px;background:var(--panel-2);overflow:hidden;border:1px solid var(--line)}
+.bar i{display:block;height:100%;width:0;background:var(--accent);transition:width .2s linear}
+.status{font-size:12.5px;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.badge{font-family:var(--mono);font-size:11px;letter-spacing:.06em;border:1px solid var(--line);border-radius:999px;padding:2px 8px;color:var(--ink-2)}
+.badge.on{border-color:var(--accent);color:var(--accent)}
+@media (prefers-reduced-motion: reduce){*{transition:none !important;animation:none !important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <span class="eyebrow">Nikon ZR · RWG / Log3G10 · N-Log</span>
+      <h1>ZR ルック比較</h1>
+    </div>
+    <nav class="tabs" role="tablist" aria-label="表示切替">
+      <button id="tab-lut" role="tab" aria-selected="true" aria-controls="pane-lut">LUT</button>
+      <button id="tab-pc" role="tab" aria-selected="false" aria-controls="pane-pc">ピクチャーコントロール</button>
+    </nav>
+  </header>
+
+  <section id="pane-lut" role="tabpanel" aria-labelledby="tab-lut">
+    <div class="viewer-grid">
+      <div class="stage-col" id="stagecol">
+        <div class="stage" id="stage">
+          <img class="before" id="imgBefore" alt="比較の基準">
+          <img class="after" id="imgAfter" alt="LUT 適用後">
+          <div class="handle" aria-hidden="true"></div>
+          <span class="tag l" id="tagL">LUT なし</span>
+          <span class="tag r" id="tagR">LUT</span>
+          <span class="hold-hint">押している間は基準を表示</span>
+        </div>
+        <div class="pair" id="pair">
+          <figure><img id="pairBefore" alt="基準"><figcaption id="capBefore"></figcaption></figure>
+          <figure><img id="pairAfter" alt="LUT 適用後"><figcaption id="capAfter"></figcaption></figure>
+        </div>
+        <div class="controls">
+          <div class="ctl"><span class="lbl">見方</span>
+            <div class="seg" id="modeSeg">
+              <button id="m-wipe" data-mode="wipe" aria-pressed="true">ワイプ</button>
+              <button id="m-side" data-mode="side" aria-pressed="false">並べる</button>
+              <button id="m-hold" data-mode="hold" aria-pressed="false">押して切替</button>
+            </div>
+          </div>
+          <div class="ctl"><span class="lbl">基準</span>
+            <div class="seg" id="baseSeg">
+              <button id="b-nlog" data-base="NLOG" aria-pressed="true">LUT なし</button>
+              <button id="b-std" data-base="IPP2_MedCon_Med_REC709" aria-pressed="false">ZR 内蔵 REC.709</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <aside class="side">
+        <div class="now" aria-live="polite">
+          <span class="k">LUT</span><span class="v mono" id="nowName"></span>
+          <span class="k">特徴</span><span class="v" id="nowDesc"></span>
+          <span class="k">元名</span><span class="v mono" id="nowOrig"></span>
+        </div>
+        <div class="card">
+          <h2>場面</h2>
+          <div class="scenes" id="scenes"></div>
+        </div>
+        <div class="card offline-card">
+          <h2>オフラインで使う</h2>
+          <p class="note">ホーム画面に追加すると、アプリとして開けます。画像を保存しておけば、電波の無い撮影現場でも見られます。</p>
+          <div class="row">
+            <button class="btn primary" id="saveAll" type="button">画像をすべて保存（約11MB）</button>
+            <button class="btn" id="installBtn" type="button" hidden>ホーム画面に追加</button>
+            <span class="badge" id="swBadge">準備中</span>
+          </div>
+          <div class="bar" aria-hidden="true"><i id="saveBar"></i></div>
+          <p class="status" id="saveStatus">保存した画像は端末内だけに残ります。</p>
+          <button class="btn" id="clearBtn" type="button">保存した画像を削除</button>
+        </div>
+        <div class="card">
+          <h2>この画像について</h2>
+          <p class="note">わらべ館で撮った ZR の N-Log（4K 59.94p）から切り出した静止画です。RED の LUT は、N-Log を Nikon と RED の公開式で RWG / Log3G10 に変換してから当てています。Nikon 公式の N-Log→Rec.709 LUT と明るさの差は 0.001 以内でした。</p>
+          <p class="note">「LUT なし」は Log のままの眠い画、「ZR 内蔵 REC.709」は本体の初期 LUT（IPP2 MedCon / R_2_Medium）です。ルックの差だけを見たいときは後者を基準にしてください。</p>
+        </div>
+      </aside>
+    </div>
+
+    <div class="list-head">
+      <h2>LUT 一覧</h2>
+      <div class="chips" id="filters">
+        <button id="f-rec" data-f="rec" aria-pressed="true">★ 本体登録おすすめ<span class="n"></span></button>
+        <button id="f-ipp2" data-f="ipp2" aria-pressed="false">IPP2 テクニカル<span class="n"></span></button>
+        <button id="f-red" data-f="red" aria-pressed="false">RED クリエイティブ<span class="n"></span></button>
+        <button id="f-nikon" data-f="nikon" aria-pressed="false">Nikon N-Log<span class="n"></span></button>
+        <button id="f-all" data-f="all" aria-pressed="false">すべて<span class="n"></span></button>
+      </div>
+    </div>
+    <div class="luts" id="luts"></div>
+  </section>
+
+  <section id="pane-pc" role="tabpanel" aria-labelledby="tab-pc" class="hidden">
+    <div class="pc-intro">
+      <p>ZR に同期したクラウドピクチャーコントロール 9 種と、最初から C-1 に入っている CineBias_RED です。撮影時に色が焼き込まれるので、編集なしでこの色になります。見本は Nikon Imaging Cloud の公式レシピページで確認できます。</p>
+    </div>
+    <ul class="cond">
+      <li>階調モード：SDR</li>
+      <li>H.265 10bit / 8bit</li>
+      <li>ProRes 422 HQ</li>
+      <li>R3D NE・N-RAW・N-Log・HLG では不可</li>
+    </ul>
+    <div class="pcs" id="pcs"></div>
+  </section>
+
+  <footer>
+    画像は LUT の傾向を見るための近似です（N-Log から計算で作った Log3G10 に 33 点 LUT を三線形補間で適用、960×540 JPEG）。実機の R3D NE とは露出やノイズの出方が異なります。
+  </footer>
+</div>
+
+<script>
+const SCENES=[
+  {id:"0274",name:"おもちゃ展示"},
+  {id:"0285",name:"室内・肌色"},
+  {id:"0260",name:"明るいホール"},
+  {id:"0290",name:"屋外・緑と空"}
+];
+const REC=["IPP2_MedCon_Soft_REC709","IPP2_LowCon_Soft_REC709","FilmBias_REC709","FilmBiasOffset_REC709","ST4_REC709","TECH_REC709","BASE_REC709","BIPOLAR_REC709","CHROMATIC_REC709","NARCISSUS_REC709"];
+const RED_DESC={
+  BASE:"影にシアン",BLAU:"冷たい影＋カラフルな中間調",BIPOLAR:"冷たい影＋淡い黄色のハイライト",CAUSTIC:"暖かく、熱い色",
+  LUSH:"青緑軸のスプリットトーン",NARCISSUS:"色を抑え、黒がチョーク調",ST4:"スプリットトーン（RED 推奨）",TECH:"昔の映画のような豊かな色（RED 推奨）",
+  PROCESS:"さらに濃い、豊かな階調色",ZONE:"赤と青の深い軸",AWASH:"ベージュに褪せた中に一部鮮やかな色",BLEACH_1:"ハイコントラスト",BLEACH_2:"ハイコントラスト",
+  CHROMATIC:"影・青・緑を鮮やかに、肌は保護",DEEP_CHROMA:"昼を夜に見せる（デイ・フォー・ナイト）",FLASH:"フラッシュバルブ調",
+  FilmBias:"暖かい金色",FilmBiasOffset:"暖かい金色のスプリットトーン（RED 推奨）",FilmBiasBleachBypass:"暖かい金色のハイコントラスト",
+  FLUORESCE:"RED の資料に説明なし",GRIME:"RED の資料に説明なし",MAUVE:"RED の資料に説明なし",PASTEL:"RED の資料に説明なし",SUPERCOLOR:"RED の資料に説明なし"
+};
+const CON={NoCon:["NO","コントラストなし"],LowCon:["LOW","低コントラスト"],MedCon:["MEDIUM","標準コントラスト"],HighCon:["HIGH","高コントラスト"]};
+const ROLL={Hard:["R_1_Hard","ハイライト硬め"],Med:["R_2_Medium","ハイライト標準"],Soft:["R_3_Soft","ハイライト柔らかめ"],VSoft:["R_4_VerySoft","ハイライトとても柔らか"]};
+const NIKON_DESC={
+  "N-Log_BT2020_to_REC709_BT1886_size_33":["N-Log テクニカル（Rec.709 化のみ）","N-Log_BT2020_to_REC709_BT1886_size_33.cube"],
+  "RED_Achromic_Rec2020_N-Log_to_Rec709_BT1886":["白黒（RED 監修）","RED_Achromic_Rec2020_N-Log_to_Rec709_BT1886.cube"],
+  "RED_FilmBias_Rec2020_N-Log_to_Rec709_BT1886":["暖かい金色（RED 監修）","RED_FilmBias_Rec2020_N-Log_to_Rec709_BT1886.cube"],
+  "RED_FilmBiasBleachBypass_Rec2020_N-Log_to_Rec709_BT1886":["暖かい金色のハイコントラスト（RED 監修）","RED_FilmBiasBleachBypass_Rec2020_N-Log_to_Rec709_BT1886.cube"],
+  "RED_FilmBiasOffset_Rec2020_N-Log_to_Rec709_BT1886":["暖かい金色のスプリットトーン（RED 監修）","RED_FilmBiasOffset_Rec2020_N-Log_to_Rec709_BT1886.cube"]
+};
+const LUT_IDS=["AWASH_REC709","BASE_REC709","BIPOLAR_REC709","BLAU_REC709","BLEACH_1_REC709","BLEACH_2_REC709","CAUSTIC_REC709","CHROMATIC_REC709","DEEP_CHROMA_REC709","FLASH_REC709","FLUORESCE_REC709","FilmBiasBleachBypass_REC709","FilmBiasOffset_REC709","FilmBias_REC709","GRIME_REC709","IPP2_HighCon_Hard_REC709","IPP2_HighCon_Med_REC709","IPP2_HighCon_Soft_REC709","IPP2_HighCon_VSoft_REC709","IPP2_LowCon_Hard_REC709","IPP2_LowCon_Med_REC709","IPP2_LowCon_Soft_REC709","IPP2_LowCon_VSoft_REC709","IPP2_MedCon_Hard_REC709","IPP2_MedCon_Med_REC709","IPP2_MedCon_Soft_REC709","IPP2_MedCon_VSoft_REC709","IPP2_NoCon_Hard_REC709","IPP2_NoCon_Med_REC709","IPP2_NoCon_Soft_REC709","IPP2_NoCon_VSoft_REC709","LUSH_REC709","MAUVE_REC709","NARCISSUS_REC709","NIKON_N-Log_BT2020_to_REC709_BT1886_size_33","NIKON_RED_Achromic_Rec2020_N-Log_to_Rec709_BT1886","NIKON_RED_FilmBiasBleachBypass_Rec2020_N-Log_to_Rec709_BT1886","NIKON_RED_FilmBiasOffset_Rec2020_N-Log_to_Rec709_BT1886","NIKON_RED_FilmBias_Rec2020_N-Log_to_Rec709_BT1886","PASTEL_REC709","PROCESS_REC709","ST4_REC709","SUPERCOLOR_REC709","TECH_REC709","ZONE_REC709"];
+
+function info(id){
+  if(id.startsWith("NIKON_")){const k=id.slice(6);const d=NIKON_DESC[k];
+    return {id,group:"nikon",grpLabel:"Nikon N-Log（本体では不可・編集用）",name:d[1],desc:d[0],orig:"LUT/Nikon/N-Log_LUT_v2.00/"+d[1]};}
+  if(id.startsWith("IPP2_")){const [,c,r]=id.split("_");
+    return {id,group:"ipp2",grpLabel:"IPP2 テクニカル",name:id+".cube",desc:CON[c][1]+"・"+ROLL[r][1]+(c==="MedCon"&&r==="Med"?"（ZR 内蔵 REC.709 と同じ）":""),
+      orig:`RWG_Log3G10 to REC709_BT1886 with ${CON[c][0]}_CONTRAST and ${ROLL[r][0]} size_33 v1.13.cube`};}
+  const k=id.replace(/_REC709$/,"");
+  return {id,group:"red",grpLabel:"RED クリエイティブ",name:id+".cube",desc:RED_DESC[k]||"",orig:`RED_${k==="FilmBias"?"FIlmBias":k}_to_Rec709_BT1886.cube`};
+}
+const ALL=LUT_IDS.map(info);
+const order=id=>{const i=REC.indexOf(id);return i<0?100+ALL.findIndex(x=>x.id===id):i};
+
+const store={get(k,d){try{const v=localStorage.getItem("zrlook:"+k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem("zrlook:"+k,JSON.stringify(v))}catch(e){}}};
+const st={scene:store.get("scene","0274"),lut:store.get("lut","FilmBias_REC709"),base:store.get("base","NLOG"),mode:store.get("mode","wipe"),filter:store.get("filter","rec"),cut:50};
+if(!SCENES.some(s=>s.id===st.scene))st.scene="0274";
+if(!ALL.some(x=>x.id===st.lut))st.lut="FilmBias_REC709";
+const $=id=>document.getElementById(id);
+const src=(sc,id)=>`img/${sc}/${id}.jpg`;
+
+function renderScenes(){
+  $("scenes").innerHTML=SCENES.map(s=>`<button id="sc-${s.id}" data-sc="${s.id}" aria-pressed="${s.id===st.scene}"><img src="${src(s.id,"IPP2_MedCon_Med_REC709")}" alt="" loading="lazy"><span>${s.name}</span></button>`).join("");
+}
+function matches(x){
+  if(st.filter==="all")return true;
+  if(st.filter==="rec")return REC.includes(x.id);
+  return x.group===st.filter;
+}
+function renderList(){
+  const items=ALL.filter(matches).sort((a,b)=>order(a.id)-order(b.id));
+  $("luts").innerHTML=items.map(x=>`<button class="lut" id="lut-${x.id}" data-lut="${x.id}" aria-pressed="${x.id===st.lut}">
+      <img src="${src(st.scene,x.id)}" alt="" loading="lazy" width="960" height="540">
+      <span class="meta"><span class="grp">${x.grpLabel}</span>
+      <span class="fn">${REC.includes(x.id)?'<span class="star" aria-label="おすすめ">★</span>':""}${x.name}</span>
+      <span class="ds">${x.desc}</span></span></button>`).join("");
+  document.querySelectorAll("#filters button").forEach(b=>{
+    const f=b.dataset.f;const n=f==="all"?ALL.length:f==="rec"?REC.length:ALL.filter(x=>x.group===f).length;
+    b.querySelector(".n").textContent=n;b.setAttribute("aria-pressed",String(f===st.filter));
+  });
+}
+function renderStage(){
+  const x=ALL.find(v=>v.id===st.lut);const baseName=st.base==="NLOG"?"LUT なし（N-Log）":"ZR 内蔵 REC.709";
+  $("imgBefore").src=src(st.scene,st.base);$("imgAfter").src=src(st.scene,st.lut);
+  $("pairBefore").src=src(st.scene,st.base);$("pairAfter").src=src(st.scene,st.lut);
+  $("tagL").textContent=baseName;$("tagR").textContent=x.name.replace(/\.cube$/,"");
+  $("capBefore").textContent=baseName;$("capAfter").textContent=x.name;
+  $("nowName").textContent=x.name;$("nowDesc").textContent=x.desc+(x.group==="nikon"?"　※ ZR 本体の 3D LUT には使えません":"");$("nowOrig").textContent=x.orig;
+  $("stage").style.setProperty("--cut",st.cut+"%");
+  $("stage").classList.toggle("mode-hold",st.mode==="hold");
+  $("stagecol").classList.toggle("side",st.mode==="side");
+  document.querySelectorAll("#modeSeg button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.mode===st.mode)));
+  document.querySelectorAll("#baseSeg button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.base===st.base)));
+  document.querySelectorAll("#scenes button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.sc===st.scene)));
+  document.querySelectorAll("#luts .lut").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.lut===st.lut)));
+}
+function save(){["scene","lut","base","mode","filter"].forEach(k=>store.set(k,st[k]))}
+
+$("scenes").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;st.scene=b.dataset.sc;save();renderList();renderStage();});
+$("luts").addEventListener("click",e=>{const b=e.target.closest(".lut");if(!b)return;st.lut=b.dataset.lut;save();renderStage();
+  if(window.matchMedia("(max-width:900px)").matches)window.scrollTo({top:0,behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});});
+$("filters").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;st.filter=b.dataset.f;save();renderList();});
+$("modeSeg").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;st.mode=b.dataset.mode;save();renderStage();});
+$("baseSeg").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;st.base=b.dataset.base;save();renderStage();});
+
+// ワイプ操作（ドラッグ／タップ）と押して切替
+const stage=$("stage");let dragging=false;
+function setCut(ev){const r=stage.getBoundingClientRect();st.cut=Math.max(0,Math.min(100,(ev.clientX-r.left)/r.width*100));stage.style.setProperty("--cut",st.cut+"%");}
+stage.addEventListener("pointerdown",ev=>{
+  if(st.mode==="hold"){stage.classList.add("pressing");stage.setPointerCapture(ev.pointerId);return;}
+  dragging=true;stage.setPointerCapture(ev.pointerId);setCut(ev);});
+stage.addEventListener("pointermove",ev=>{if(dragging)setCut(ev)});
+["pointerup","pointercancel","pointerleave"].forEach(t=>stage.addEventListener(t,()=>{dragging=false;stage.classList.remove("pressing")}));
+stage.tabIndex=0;stage.setAttribute("role","slider");stage.setAttribute("aria-label","比較位置");
+stage.addEventListener("keydown",ev=>{if(ev.key==="ArrowLeft"||ev.key==="ArrowRight"){st.cut=Math.max(0,Math.min(100,st.cut+(ev.key==="ArrowLeft"?-5:5)));stage.style.setProperty("--cut",st.cut+"%");ev.preventDefault();}});
+
+// ピクチャーコントロール
+const PCS=[
+  {slot:"C-1",cam:"CineBias_RED",name:"CineBias by RED",by:"RED（本体に内蔵）",desc:"すっきりした寒色寄りの、柔らかいシネマ調。ZR の基本形。",use:["全般","人物"],url:"https://imagingcloud.nikon.com/recipe/release/"},
+  {slot:"クラウド 1",cam:"CineBias-C",name:"CineBias-C · Crisp Teal Contrast",by:"RED",desc:"ティール系の寒色と、シャープで強めのコントラスト。",use:["シネマティック動画","街"],rate:4,url:"https://web.imagingcloud.nikon.com/2XsqE2"},
+  {slot:"クラウド 2",cam:"CineBias-BB",name:"CineBias BleachBypass",by:"RED",desc:"彩度を落とした高コントラスト。金属的でざらっとした質感。",use:["建物","ドキュメンタリー調"],url:"https://web.imagingcloud.nikon.com/OQqKIG"},
+  {slot:"クラウド 3",cam:"CineBiasOffset",name:"CineBiasOffset",by:"RED",desc:"抑えた寒色の、控えめなグレーディング調。",use:["日常","曇り"],url:"https://web.imagingcloud.nikon.com/rtJkNsc"},
+  {slot:"クラウド 4",cam:"CineBias-WC",name:"CineBias WC · Grit & Glow",by:"RED",desc:"深い影に、暖色で鮮やかなハイライト。高コントラスト。",use:["夕方","逆光"],url:"https://web.imagingcloud.nikon.com/wJnajB"},
+  {slot:"クラウド 5",cam:"CineBias-TC",name:"CineBias-TC · Green Edge Experimental",by:"RED",desc:"緑が強い、実験的で非現実的なルック。",use:["作品づくり"],url:"https://web.imagingcloud.nikon.com/CzehNA"},
+  {slot:"クラウド 6",cam:"CineBias-CC",name:"CineBias-CC · Noir Vibes",by:"RED",desc:"ティール寄りで影が深い、ミステリアスなノワール調。",use:["夜","雨","室内の暗部"],url:"https://web.imagingcloud.nikon.com/enSWNEu"},
+  {slot:"クラウド 7",cam:"CineBias-T",name:"CineBias-T · Cool Atmosphere",by:"RED",desc:"少しクールで、ティール寄りの穏やかな映画調。",use:["街","室内","夕方"],rate:5,url:"https://web.imagingcloud.nikon.com/xNHH8rx"},
+  {slot:"クラウド 8",cam:"CineBlue_BrandonW",name:"Cinematic Blue",by:"Brandon Woelfel",desc:"ハイライトは暖色、中間〜シャドーは青緑。",use:["夜","街","雰囲気重視"],rate:4,url:"https://web.imagingcloud.nikon.com/J1djWD"},
+  {slot:"クラウド 9",cam:"DGFilmLook_DannyG",name:"DG Film Look",by:"Danny Gevirtz",desc:"柔らかいハイライトと深い黒の、クラシックな映画調。",use:["子ども","日常","旅行","運動会"],rate:5,url:"https://web.imagingcloud.nikon.com/LBt1AO"}
+];
+$("pcs").innerHTML=PCS.map(p=>`<article class="pc${p.rate===5?" fav":""}">
+  <div class="slot"><span>${p.slot}</span><b>${p.cam}</b></div>
+  <h3>${p.name}</h3><span class="by">${p.by}</span>
+  ${p.rate?`<span class="rate" aria-label="おすすめ度 ${p.rate}">${"★".repeat(p.rate)}${"☆".repeat(5-p.rate)}<small>あなたの評価</small></span>`:""}
+  <p>${p.desc}</p>
+  <div class="use">${p.use.map(u=>`<span>${u}</span>`).join("")}</div>
+  <a href="${p.url}" target="_blank" rel="noopener">${p.slot==="C-1"?"Imaging Cloud のレシピ一覧を開く":"公式の見本と設定を見る"}</a>
+</article>`).join("");
+
+// タブ
+function tab(which){const l=which==="lut";$("tab-lut").setAttribute("aria-selected",String(l));$("tab-pc").setAttribute("aria-selected",String(!l));
+  $("pane-lut").classList.toggle("hidden",!l);$("pane-pc").classList.toggle("hidden",l);store.set("tab",which);}
+$("tab-lut").addEventListener("click",()=>tab("lut"));$("tab-pc").addEventListener("click",()=>tab("pc"));
+
+renderScenes();renderList();renderStage();tab(store.get("tab","lut"));
+
+// ---- PWA（インストールとオフライン保存）----
+const swBadge=$("swBadge"),saveBtn=$("saveAll"),saveBar=$("saveBar"),saveStatus=$("saveStatus"),clearBtn=$("clearBtn"),installBtn=$("installBtn");
+const ALL_URLS=(()=>{const u=[];for(const s of SCENES){u.push(`img/${s.id}/NLOG.jpg`);for(const x of ALL)u.push(`img/${s.id}/${x.id}.jpg`);}return u})();
+if("serviceWorker" in navigator){
+  navigator.serviceWorker.register("sw.js").then(()=>{swBadge.textContent="オフライン対応";swBadge.classList.add("on")})
+    .catch(()=>{swBadge.textContent="オフライン不可"});
+  navigator.serviceWorker.addEventListener("message",ev=>{
+    const d=ev.data||{};
+    if(d.type==="PRECACHE_PROGRESS"){
+      const pct=Math.round(d.done/d.total*100);
+      saveBar.style.width=pct+"%";saveStatus.textContent=`保存中 ${d.done} / ${d.total} 枚（${pct}%）`;
+      if(d.done===d.total){saveBtn.disabled=false;saveBtn.textContent="画像をすべて保存済み";saveStatus.textContent=`${d.total} 枚を端末に保存しました。`}
+    }
+    if(d.type==="MEDIA_CLEARED"){saveBar.style.width="0";saveBtn.disabled=false;saveBtn.textContent="画像をすべて保存（約11MB）";saveStatus.textContent="保存した画像を削除しました。"}
+  });
+}else{swBadge.textContent="オフライン不可"}
+saveBtn.addEventListener("click",async()=>{
+  const reg=await navigator.serviceWorker?.ready.catch(()=>null);
+  if(!reg?.active){saveStatus.textContent="オフライン保存を準備中です。少し待ってからもう一度押してください。";return}
+  saveBtn.disabled=true;saveBtn.textContent="保存中…";saveStatus.textContent="保存中 0 / "+ALL_URLS.length+" 枚";
+  reg.active.postMessage({type:"PRECACHE",urls:ALL_URLS});
+});
+clearBtn.addEventListener("click",async()=>{
+  const reg=await navigator.serviceWorker?.ready.catch(()=>null);
+  if(reg?.active)reg.active.postMessage({type:"CLEAR_MEDIA"});
+});
+let deferredPrompt=null;
+window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();deferredPrompt=e;installBtn.hidden=false});
+installBtn.addEventListener("click",async()=>{
+  if(!deferredPrompt)return;installBtn.disabled=true;deferredPrompt.prompt();
+  await deferredPrompt.userChoice;deferredPrompt=null;installBtn.hidden=true;installBtn.disabled=false;
+});
+if(window.matchMedia("(display-mode: standalone)").matches||window.navigator.standalone){swBadge.textContent="アプリとして起動中";swBadge.classList.add("on")}
+else if(/iPhone|iPad|iPod/.test(navigator.userAgent)){saveStatus.textContent="iPhone は Safari の共有ボタン →「ホーム画面に追加」でアプリになります。";}
+
+</script>
+</body>
+</html>
