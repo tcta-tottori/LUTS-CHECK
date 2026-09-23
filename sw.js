@@ -1,5 +1,5 @@
 /* ZR ルック比較 — オフライン用 Service Worker */
-const VERSION = "v1";
+const VERSION = "v2";
 const SHELL = "shell-" + VERSION;   // アプリ本体（HTML / manifest / アイコン）
 const MEDIA = "media-" + VERSION;   // 比較画像（必要になった分だけ貯める）
 const SHELL_FILES = ["./", "./index.html", "./manifest.webmanifest", "./icons/icon-192.png", "./icons/icon-512.png", "./icons/maskable-512.png"];
